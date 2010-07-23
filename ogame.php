@@ -97,8 +97,8 @@ if (!empty($_POST['data'])) {
 			$rs = $db->queryExec("INSERT INTO resources (location, updated, metal, crystal, deuterium) VALUES ({$loc_id}, {$parsed['updated']}, {$metal}, {$crystal}, {$deuterium});");
 		}		
 	}
-	print_r($parsed);
-	print_r($data);
+	debuglog(var_export($parsed, true));
+	debuglog(var_export($data, true));
 }
 
 echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
@@ -291,6 +291,10 @@ endif;
 </html>
 <?php
 ///// Functions /////
+function debuglog($msg) {
+	if (isset($_GET['debug'])) echo $msg;
+}
+
 function date_labels($ts_start, $increment, $ts_min, $ts_max, $format) {
 	$labels = $positions = array();
 	while ($ts_start < $ts_max) {
