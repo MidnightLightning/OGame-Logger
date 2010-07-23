@@ -1,5 +1,20 @@
-To use, simply place the ogame.php file on a web server that has PHP, compiled with SQLite capability and write-access to the directory it's in (the file "ogame.db" will be created automatically).
+== About ==
+OGame is a web-based browser game where users can command an economy spanning multiple planets and fleets of starships conquring the galaxy.
+
+As part of the game, intelligence (Espionage) reports are gathered about other players of the game. This tool helps parse and organize those reports to better serve players.
+
+== Install ==
+To use, simply place the ogame.php file on a web server that has PHP, compiled with SQLite capability and write-access to the directory it's in (the file "ogame.db" will be created automatically on first access). Then visit the page via a web browser (i.e. http://www.example.com/path/to/ogame.php).
 
 OGame Logger uses Google Chart Tools (http://code.google.com/apis/chart/) for graphing, and Google AJAX Libraries (http://code.google.com/apis/ajaxlibs/) for jQuery JavaScript implementation.
 
 OGame uses some CSS3 features to add visual appeal to the pages; it's recommended you view the tool using a latest-generation browser to have the best experience.
+
+== Usage ==
+When an Espionage action is complete, a message will arrive detailing the result of the probe. Click the message in the game console and it will pop up, over the rest of the interface. Click within that message and type CTRL+A (COMMAND+A on a Mac) to select all text (should only select text within the Espionage report message). Copy that text to your clipboard (CTRL+C on a PC, or COMMAND+C on a Mac), and Paste it into the text box at the top of any OGame Logger screen. Press the submit button, and the OGame Logger will record the result.
+
+Successful Attack Reports can also be pasted into the OGame Logger; The OGame Logger will take the most recent report prior to the Attack Report, and subtract the Loot acquired in the Attack, and save the result as a "best guess" at the new resource levels of the planet.
+
+OGame Logger will use the timestamp from the Espionage report and will make a note of the Metal, Crystal, and Deuterium resources of the planet at that moment. The home page of the OGame Logger will list all known locations and how "fresh" the data is. Clicking on a header of the table will sort by that metric.
+
+Clicking the name of a Location will show detail over time for that location, showing if the values are increasing (mines are active on the planet), or varying (player is actively spending/earning resources).
