@@ -257,9 +257,36 @@ else:
 	
 	$ts_now = time();
 	foreach($locations as &$location) {
-		$location['r.metal'] = number_format($location['r.metal']);
-		$location['r.crystal'] = number_format($location['r.crystal']);
-		$location['r.deuterium'] = number_format($location['r.deuterium']);
+		if ($location['x.recordnum'] > 1) {
+			// Determine up/down trending
+			$tmp = $db->query("SELECT * FROM resources WHERE location={$location['r.location']} AND updated<{$location['r.updated']} ORDER BY updated DESC LIMIT 1");
+			$tmp = $tmp->fetch(SQLITE_ASSOC);
+			if ($tmp['metal'] > $location['r.metal']) {
+				$location['r.metal'] = "<span title=\"Decrease since last\" style=\"color:#FF9999\">".number_format($location['r.metal'])."</span>";
+			} elseif ($tmp['metal'] < $location['r.metal']) {
+				$location['r.metal'] = "<span title=\"Increase since last\" style=\"color:#99FF99\">".number_format($location['r.metal'])."</span>";
+			} else {
+				$location['r.metal'] = number_format($location['r.metal']);
+			}
+			if ($tmp['crystal'] > $location['r.crystal']) {
+				$location['r.crystal'] = "<span title=\"Decrease since last\"  style=\"color:#FF9999\">".number_format($location['r.crystal'])."</span>";
+			} elseif ($tmp['crystal'] < $location['r.crystal']) {
+				$location['r.crystal'] = "<span title=\"Increase since last\"  style=\"color:#99FF99\">".number_format($location['r.crystal'])."</span>";
+			} else {
+				$location['r.crystal'] = number_format($location['r.crystal']);
+			}
+			if ($tmp['deuterium'] > $location['r.deuterium']) {
+				$location['r.deuterium'] = "<span title=\"Decrease since last\"  style=\"color:#FF9999\">".number_format($location['r.deuterium'])."</span>";
+			} elseif ($tmp['deuterium'] < $location['r.deuterium']) {
+				$location['r.deuterium'] = "<span title=\"Increase since last\"  style=\"color:#99FF99\">".number_format($location['r.deuterium'])."</span>";
+			} else {
+				$location['r.deuterium'] = number_format($location['r.deuterium']);
+			}
+		} else {
+			$location['r.metal'] = number_format($location['r.metal']);
+			$location['r.crystal'] = number_format($location['r.crystal']);
+			$location['r.deuterium'] = number_format($location['r.deuterium']);
+		}
 		$date = $ts_now-$location['r.updated'];
 		$date = $date/60;
 		$row_color = $date_color = "inherit";
