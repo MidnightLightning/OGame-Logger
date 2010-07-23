@@ -254,6 +254,29 @@ else:
 			$sort = 'l.location';
 	}
 	$locations = $db->arrayQuery("SELECT r.*, l.*, x.recordnum FROM (SELECT location, max(updated) as maxupdated, count(*) AS recordnum FROM resources GROUP BY location) x LEFT JOIN resources r ON r.updated=x.maxupdated AND r.location=x.location LEFT JOIN locations l ON l.ROWID=r.location ORDER BY {$sort};", SQLITE_ASSOC);
+	
+	$ts_now = time();
+	foreach($locations as &$location) {
+		$location['r.metal'] = number_format($location['r.metal']);
+		$location['r.crystal'] = number_format($location['r.crystal']);
+		$location['r.deuterium'] = number_format($location['r.deuterium']);
+		$date = $ts_now-$location['r.updated'];
+		$date = $date/60;
+		$row_color = $date_color = "inherit";
+		if ($date < 60) {
+			$location['elapsed'] = floor($date)." min. ago";
+			$location['elapsed_color'] = "#00FF00";
+			$location['row_color'] = "rgba(0,255,0,0.1)";
+		} elseif ($date < 60*24) {
+			$location['elapsed'] = floor($date/60)." hrs. ago";
+			$location['elapsed_color'] = "#FFFF00";
+			$location['row_color'] = "rgba(255,255,0,0.1)";
+		} else {
+			$location['elapsed'] = floor($date/60/24)." days ago";
+			$location['elapsed_color'] = "#FF3333";
+			$location['row_color'] = "rgba(255,0,0,0.1)";
+		}
+	}
 ?>
 
 <div class="block">
@@ -264,20 +287,7 @@ else:
 <tbody>
 <?php
 foreach($locations as $location) {
-	$date = time()-$location['r.updated'];
-	$date = $date/60;
-	$row_color = "inherit";
-	if ($date < 60) {
-		$date = "<span style=\"color:#00FF00\">".floor($date)." min. ago</span>";
-		$row_color = "rgba(0,255,0,0.1)";
-	} elseif ($date < 60*24) {
-		$date = "<span style=\"color:#FFFF00\">".floor($date/60)." hrs. ago</span>";
-		$row_color = "rgba(255,255,0,0.1)";
-	} else {
-		$date = "<span style=\"color:#FF3333\">".floor($date/60/24)." days ago</span>";
-		$row_color = "rgba(255,0,0,0.1)";
-	}
-	echo "<tr style=\"background-color:{$row_color}\"><td>{$date} ({$location['x.recordnum']} records total)</td><td><a href=\"{$_SERVER['PHP_SELF']}?l={$location['r.location']}\">{$location['l.name']}</a></td><td>{$location['l.location']}</td><td>{$location['l.player']}</td><td class=\"num\">".number_format($location['r.metal'])."</td><td class=\"num\">".number_format($location['r.crystal'])."</td><td class=\"num\">".number_format($location['r.deuterium'])."</td></tr>\n";
+	echo "<tr style=\"background-color:{$location['row_color']}\"><td><span style=\"color:{$location['elapsed_color']}\">{$location['elapsed']}</span> ({$location['x.recordnum']} records total)</td><td><a href=\"{$_SERVER['PHP_SELF']}?l={$location['r.location']}\">{$location['l.name']}</a></td><td>{$location['l.location']}</td><td>{$location['l.player']}</td><td class=\"num\">{$location['r.metal']}</td><td class=\"num\">{$location['r.crystal']}</td><td class=\"num\">{$location['r.deuterium']}</td></tr>\n";
 }
 ?>
 </tbody>
