@@ -11,9 +11,10 @@ $db = new SQLiteDatabase('ogame.db');
 @$db->queryExec('CREATE TABLE locations (name STRING, location STRING, type STRING, player STRING);');
 @$db->queryExec('CREATE TABLE resources (location INTEGER, updated INTEGER, metal INTEGER, crystal INTEGER, deuterium INTEGER);', $err);
 
-
+/**
+ * Parse text data from Espionage or Attack Reports
+ */
 if (!empty($_POST['data'])) {
-	// Parse data
 	$data = explode("\n", $_POST['data']);
 	$parsed = array();
 	foreach($data as $i => $line) {
@@ -142,7 +143,8 @@ echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 <body>
 <div id="wrapper">
 <div class="block"><form action="<?=$_SERVER['PHP_SELF']?>" method="post"><textarea name="data" style="width:100%; height:100px;"></textarea><input type="submit" value="Parse" /></form>
-<p><a href="http://www.jimmywest.se/other/calcogame/index.php?page=Reports" rel="external">JimmyWest Parser</a></p></div>
+<p><a href="http://www.jimmywest.se/other/calcogame/index.php?page=Reports" rel="external">JimmyWest Parser</a></p><!-- An additional Espionage Parser, for additional data from the report -->
+</div>
 
 <div class="block">
 <p style="margin:0; font-size:1.5em; font-weight:bold; text-align:center;">Game time: <?php echo date("d.m.Y H:i:s"); ?></h1>
