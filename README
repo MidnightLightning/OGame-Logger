@@ -1,0 +1,5 @@
+To use, simply place the ogame.php file on a web server that has PHP, compiled with SQLite capability and write-access to the directory it's in (the file "ogame.db" will be created automatically).
+
+OGame Logger uses Google Chart Tools (http://code.google.com/apis/chart/) for graphing, and Google AJAX Libraries (http://code.google.com/apis/ajaxlibs/) for jQuery JavaScript implementation.
+
+OGame uses some CSS3 features to add visual appeal to the pages; it's recommended you view the tool using a latest-generation browser to have the best experience.
