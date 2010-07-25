@@ -17,7 +17,7 @@ $db = new SQLiteDatabase('ogame.db');
 if (!empty($_POST['data'])) {
 	$data = explode("\n", $_POST['data']);
 	$parsed = array();
-	foreach($data as $i => $line) {
+	foreach($data as $i => &$line) {
 		$line = trim($line); // Remove whitespace
 		if (substr($line,0,5) == 'Date:') {
 			// This is the date of the message
@@ -30,10 +30,9 @@ if (!empty($_POST['data'])) {
 			$parsed['updated_std'] = date('c', $parsed['updated']);
 		} elseif (substr($line,0,8) == 'Subject:') {
 			// Subject of the message
-			$line = trim(substr($line,8)); // Trim off leader
-			if (substr($line,0,9) == 'Espionage') {
+			if (substr(trim(substr($line,8)),0,9) == 'Espionage') {
 				$parsed['action'] = 'espionage';
-				$location = substr($line,20);
+				$location = substr($line,30);
 				$pos = strpos($location, "[");
 				$parsed['name'] = substr($location,0,$pos-1);
 				$parsed['location'] = substr($location,$pos+1, -1);
@@ -47,8 +46,7 @@ if (!empty($_POST['data'])) {
 			$parsed['name'] = $tmp[0];
 			$parsed['location'] = substr($tmp[1], 1, -1);
 		} elseif (substr($line,0,6) == 'Loot :') {
-			$line = trim(substr($line,6));
-			$tmp = explode(" ", $line);
+			$tmp = explode(" ", trim(substr($line,6)));
 			$parsed['metal'] = str_replace(".", "", $tmp[0]);
 			$parsed['crystal'] = str_replace(".", "", $tmp[2]);
 			$parsed['deuterium'] = str_replace(".", "", $tmp[5]);
