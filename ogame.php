@@ -176,7 +176,6 @@ echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 	</script>
 	<script type="text/javascript">
 		$(document).ready(function() {
-			console.log("Parsing links");
 			$("a[rel*='external']").click(function(event) {
 				event.preventDefault(); // Keep from following standard href of link
 				new_win = window.open($(this).attr('href'), 'offsite_popup') // Pop up a window to that URL
@@ -188,7 +187,7 @@ echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
  
 <body>
 <div id="wrapper">
-<div class="block"><form action="<?=$_SERVER['PHP_SELF']?>" method="post"><textarea name="data" style="width:100%; height:100px;"></textarea><input type="submit" value="Parse" /></form>
+<div class="block"><form action="<?php echo $_SERVER['PHP_SELF']; if (isset($_GET['debug'])) echo "?debug"; ?>" method="post"><textarea name="data" style="width:100%; height:100px;"></textarea><input type="submit" value="Parse" /></form>
 <p><a href="http://www.jimmywest.se/other/calcogame/index.php?page=Reports" rel="external">JimmyWest Parser</a></p><!-- An additional Espionage Parser, for additional data from the report -->
 </div>
 
