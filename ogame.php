@@ -9,7 +9,7 @@ date_default_timezone_set('Etc/GMT-2'); // Set timezone for OGame servers
 
 $db = new SQLiteDatabase('ogame.db');
 @$db->queryExec('CREATE TABLE locations (name STRING, location STRING, type STRING, player STRING);');
-@$db->queryExec('CREATE TABLE resources (location INTEGER, updated INTEGER, metal INTEGER, crystal INTEGER, deuterium INTEGER);', $err);
+@$db->queryExec('CREATE TABLE resources (location INTEGER, updated INTEGER, metal INTEGER, crystal INTEGER, deuterium INTEGER, fleet TEXT, defense TEXT, buildings TEXT, research TEXT);', $err);
 
 /**
  * Parse text data from Espionage or Attack Reports
@@ -64,6 +64,50 @@ if (!empty($_POST['data'])) {
 			$line = preg_replace("/\s+/", ' ', $line);
 			$tmp = explode(" ", $line);
 			$parsed['deuterium'] = str_replace(".", "", $tmp[1]);
+		} elseif ($line == 'fleets') {
+			// Lines up until "Defense" are about fleets
+			$j = $i+1;
+			$ships = array();
+			while ($j < count($data) && trim($data[$j]) != 'Defense') {
+				preg_match_all('/([\w ]+)\s+(\d+)/', $data[$j], $matches);
+				$ships[$matches[1][0]] = $matches[2][0];
+				if (isset($matches[1][1])) $ships[$matches[1][1]] = $matches[2][1];
+				$j++;
+			}
+			$parsed['fleet'] = $ships;
+		} elseif ($line == 'Defense') {
+			// Lines up until "Building" are about defenses
+			$j = $i+1;
+			$defenses = array();
+			while ($j < count($data) && trim($data[$j]) != 'Building') {
+				preg_match_all('/([\w ]+)\s+(\d+)/', $data[$j], $matches);
+				$defenses[$matches[1][0]] = $matches[2][0];
+				if (isset($matches[1][1])) $defenses[$matches[1][1]] = $matches[2][1];
+				$j++;
+			}
+			$parsed['defense'] = $defenses;
+		} elseif ($line == 'Building') {
+			// Lines up until "Research" are about buildings
+			$j = $i+1;
+			$buildings = array();
+			while ($j < count($data) && trim($data[$j]) != 'Research') {
+				preg_match_all('/([\w ]+)\s+(\d+)/', $data[$j], $matches);
+				$buildings[$matches[1][0]] = $matches[2][0];
+				if (isset($matches[1][1])) $buildings[$matches[1][1]] = $matches[2][1];
+				$j++;
+			}
+			$parsed['buildings'] = $buildings;
+		} elseif ($line == 'Research') {
+			// Lines up until "counter-espionage" are about Research
+			$j = $i+1;
+			$research = array();
+			while ($j < count($data) && substr(trim($data[$j]),0,27) != 'Chance of counter-espionage') {
+				preg_match_all('/([\w ]+)\s+(\d+)/', $data[$j], $matches);
+				$research[$matches[1][0]] = $matches[2][0];
+				if (isset($matches[1][1])) $research[$matches[1][1]] = $matches[2][1];
+				$j++;
+			}
+			$parsed['research'] = $research;
 		}
 	}
 	if (!empty($parsed['name']) && !empty($parsed['location'])) {
@@ -82,7 +126,11 @@ if (!empty($_POST['data'])) {
 		// Replace data with this result
 		$rs = $db->query("SELECT ROWID FROM resources WHERE location={$loc_id} AND updated={$parsed['updated']};");
 		if ($rs->numRows() == 0) {
-			$rs = $db->queryExec("INSERT INTO resources (location, updated, metal, crystal, deuterium) VALUES ({$loc_id}, {$parsed['updated']}, {$parsed['metal']}, {$parsed['crystal']}, {$parsed['deuterium']});");
+			$fleet = (isset($parsed['fleet']))? serialize($parsed['fleet']) : '';
+			$defense = (isset($parsed['defense']))? serialize($parsed['defense']) : '';
+			$buildings = (isset($parsed['buildings']))? serialize($parsed['buildings']) : '';
+			$research = (isset($parsed['buildings']))? serialize($parsed['research']) : '';
+			$rs = $db->queryExec("INSERT INTO resources (location, updated, metal, crystal, deuterium, fleet, defense, buildings, research) VALUES ({$loc_id}, {$parsed['updated']}, {$parsed['metal']}, {$parsed['crystal']}, {$parsed['deuterium']}, '{$fleet}', '{$defense}', '{$buildings}', '{$research}');");
 		}
 	} elseif ($parsed['action'] == 'attack') {
 		// Subtract loot from planet's resources
@@ -260,30 +308,30 @@ else:
 			$tmp = $db->query("SELECT * FROM resources WHERE location={$location['r.location']} AND updated<{$location['r.updated']} ORDER BY updated DESC LIMIT 1");
 			$tmp = $tmp->fetch(SQLITE_ASSOC);
 			if ($tmp['metal'] > $location['r.metal']) {
-				$location['r.metal'] = "<span title=\"Decrease since last\" style=\"color:#FF9999\">".number_format($location['r.metal'])."</span>";
+				$location['r.metal_formatted'] = "<span title=\"Decrease since last\" style=\"color:#FF9999\">".number_format($location['r.metal'])."</span>";
 			} elseif ($tmp['metal'] < $location['r.metal']) {
-				$location['r.metal'] = "<span title=\"Increase since last\" style=\"color:#99FF99\">".number_format($location['r.metal'])."</span>";
+				$location['r.metal_formatted'] = "<span title=\"Increase since last\" style=\"color:#99FF99\">".number_format($location['r.metal'])."</span>";
 			} else {
-				$location['r.metal'] = number_format($location['r.metal']);
+				$location['r.metal_formatted'] = number_format($location['r.metal']);
 			}
 			if ($tmp['crystal'] > $location['r.crystal']) {
-				$location['r.crystal'] = "<span title=\"Decrease since last\"  style=\"color:#FF9999\">".number_format($location['r.crystal'])."</span>";
+				$location['r.crystal_formatted'] = "<span title=\"Decrease since last\"  style=\"color:#FF9999\">".number_format($location['r.crystal'])."</span>";
 			} elseif ($tmp['crystal'] < $location['r.crystal']) {
-				$location['r.crystal'] = "<span title=\"Increase since last\"  style=\"color:#99FF99\">".number_format($location['r.crystal'])."</span>";
+				$location['r.crystal_formatted'] = "<span title=\"Increase since last\"  style=\"color:#99FF99\">".number_format($location['r.crystal'])."</span>";
 			} else {
-				$location['r.crystal'] = number_format($location['r.crystal']);
+				$location['r.crystal_formatted'] = number_format($location['r.crystal']);
 			}
 			if ($tmp['deuterium'] > $location['r.deuterium']) {
-				$location['r.deuterium'] = "<span title=\"Decrease since last\"  style=\"color:#FF9999\">".number_format($location['r.deuterium'])."</span>";
+				$location['r.deuterium_formatted'] = "<span title=\"Decrease since last\"  style=\"color:#FF9999\">".number_format($location['r.deuterium'])."</span>";
 			} elseif ($tmp['deuterium'] < $location['r.deuterium']) {
-				$location['r.deuterium'] = "<span title=\"Increase since last\"  style=\"color:#99FF99\">".number_format($location['r.deuterium'])."</span>";
+				$location['r.deuterium_formatted'] = "<span title=\"Increase since last\"  style=\"color:#99FF99\">".number_format($location['r.deuterium'])."</span>";
 			} else {
-				$location['r.deuterium'] = number_format($location['r.deuterium']);
+				$location['r.deuterium_formatted'] = number_format($location['r.deuterium']);
 			}
 		} else {
-			$location['r.metal'] = number_format($location['r.metal']);
-			$location['r.crystal'] = number_format($location['r.crystal']);
-			$location['r.deuterium'] = number_format($location['r.deuterium']);
+			$location['r.metal_formatted'] = number_format($location['r.metal']);
+			$location['r.crystal_formatted'] = number_format($location['r.crystal']);
+			$location['r.deuterium_formatted'] = number_format($location['r.deuterium']);
 		}
 		$date = $ts_now-$location['r.updated'];
 		$date = $date/60;
@@ -301,18 +349,52 @@ else:
 			$location['elapsed_color'] = "#FF3333";
 			$location['row_color'] = "rgba(255,0,0,0.1)";
 		}
+		
+		// Do fleet/defense calculations
+		$fleet = ($location['r.fleet'] != '')? unserialize($location['r.fleet']) : array();
+		$defense = ($location['r.defense'] != '')? unserialize($location['r.defense']) : array();
+		$research = ($location['r.research'] != '')? unserialize($location['r.research']) : array();
+		$w_tech = (isset($research['Weapons Technology']))? $research['Weapons Technology'] : 0;
+		$s_tech = (isset($research['Shielding Technolog']))? $research['Shielding Technology'] : 0;
+		$location['fleet_url'] = $location['defense_url'] = '';
+		$location['fleet_url'] .= "&dwtech={$w_tech}&dstech={$s_tech}";
+		$location['w_power'] = $location['s_power'] = $location['integrity'] = 0;
+		foreach($fleet as $ship => $quantity) {
+			switch($ship) {
+				case "Light Fighter":
+					$location['fleet_url'] .= "&dsfig=".$quantity;
+					$location['w_power'] += 50*(1+$w_tech/10)*$quantity;
+					break;
+				case "Recycler":
+					$location['fleet_url'] .= "&drecy=".$quantity;
+					$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
+					break;
+				case "Solar Satellite":
+					$location['fleet_url'] .= "&dsola=".$quantity;
+					$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
+					break;
+			}
+		}
+		foreach($defense as $name => $quantity) {
+			switch($name) {
+				case "Rocket Launcher":
+					$location['defense_url'] .= "&drock=".quantity;
+					$location['w_power'] += 80*(1+$w_tech/10)*$quantity;
+					break;
+			}
+		}
 	}
 ?>
 
 <div class="block">
 <table style="width:100%" cellspacing="0" cellpadding="3">
 <thead>
-<tr><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=updated">Updated</a></th><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=locname">Name</a></th><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=location">Location</a></th><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=player">Player</a></th><th style="text-align:right"><a href="<?=$_SERVER['PHP_SELF']?>?sort=metal">Metal</a></th><th style="text-align:right"><a href="<?=$_SERVER['PHP_SELF']?>?sort=crystal">Crystal</a></th><th style="text-align:right"><a href="<?=$_SERVER['PHP_SELF']?>?sort=deuterium">Deuterium</a></th></tr>
+<tr><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=updated">Updated</a></th><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=locname">Name</a></th><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=location">Location</a></th><th><a href="<?=$_SERVER['PHP_SELF']?>?sort=player">Player</a></th><th style="text-align:right"><a href="<?=$_SERVER['PHP_SELF']?>?sort=metal">Metal</a></th><th style="text-align:right"><a href="<?=$_SERVER['PHP_SELF']?>?sort=crystal">Crystal</a></th><th style="text-align:right"><a href="<?=$_SERVER['PHP_SELF']?>?sort=deuterium">Deuterium</a></th><th>Fleet/Defense</th></tr>
 </thead>
 <tbody>
 <?php
-foreach($locations as $location) {
-	echo "<tr style=\"background-color:{$location['row_color']}\"><td><span style=\"color:{$location['elapsed_color']}\">{$location['elapsed']}</span> ({$location['x.recordnum']} records total)</td><td><a href=\"{$_SERVER['PHP_SELF']}?l={$location['r.location']}\">{$location['l.name']}</a></td><td>{$location['l.location']}</td><td>{$location['l.player']}</td><td class=\"num\">{$location['r.metal']}</td><td class=\"num\">{$location['r.crystal']}</td><td class=\"num\">{$location['r.deuterium']}</td></tr>\n";
+foreach($locations as &$location) {
+	echo "<tr style=\"background-color:{$location['row_color']}\"><td><span style=\"color:{$location['elapsed_color']}\">{$location['elapsed']}</span> ({$location['x.recordnum']} records total)</td><td><a href=\"{$_SERVER['PHP_SELF']}?l={$location['r.location']}\">{$location['l.name']}</a></td><td>{$location['l.location']}</td><td>{$location['l.player']}</td><td class=\"num\">{$location['r.metal_formatted']}</td><td class=\"num\">{$location['r.crystal_formatted']}</td><td class=\"num\">{$location['r.deuterium_formatted']}</td><td>{$location['w_power']}/{$location['s_power']}/{$location['integrity']} <a href=\"http://www.jimmywest.se/other/calcogame/index.php?page=Attack%20Simulator&m_plu={$location['r.metal']}&c_plu={$location['r.crystal']}&d_plu={$location['r.deuterium']}{$location['fleet_url']}&e_pos={$location['l.location']}&sim=true\">Atk. sim</a></td></tr>\n";
 }
 ?>
 </tbody>
