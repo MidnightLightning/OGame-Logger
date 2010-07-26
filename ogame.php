@@ -302,8 +302,14 @@ else:
 	
 	$ts_now = time();
 	foreach($locations as &$location) {
+		// Get most recent fleet, defense, building, and research data
+		$location['r.fleet'] = most_recent_of('fleet', $location['r.location']);
+		$location['r.defense'] = most_recent_of('defense', $location['r.location']);
+		$location['r.buildings'] = most_recent_of('buildings', $location['r.location']);
+		$location['r.research'] = most_recent_of('research', $location['r.location']);
+			
+		// Determine up/down trending
 		if ($location['x.recordnum'] > 1) {
-			// Determine up/down trending
 			$tmp = $db->query("SELECT * FROM resources WHERE location={$location['r.location']} AND updated<{$location['r.updated']} ORDER BY updated DESC LIMIT 1");
 			$tmp = $tmp->fetch(SQLITE_ASSOC);
 			if ($tmp['metal'] > $location['r.metal']) {
@@ -421,4 +427,14 @@ function date_labels($ts_start, $increment, $ts_min, $ts_max, $format) {
 		$ts_start += $increment;
 	}
 	return array($labels, $positions);
+}
+
+function most_recent_of($col, $location) {
+	global $db;
+	$rs = $db->query("SELECT r.{$col} FROM (SELECT location, max(updated) as maxupdated FROM resources WHERE {$col}!='' GROUP BY location) x LEFT JOIN resources r on r.updated=x.maxupdated AND r.location=x.location WHERE r.location={$location} LIMIT 1;");
+	if ($rs->numRows() > 0) {
+		$rs = $rs->fetch(SQLITE_NUM);
+		return $rs[0];
+	}
+	return false;
 }
