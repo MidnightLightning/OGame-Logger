@@ -372,36 +372,44 @@ else:
 		}
 		
 		// Do fleet/defense calculations
-		$fleet = ($location['r.fleet'] != '')? unserialize($location['r.fleet']) : array();
-		$defense = ($location['r.defense'] != '')? unserialize($location['r.defense']) : array();
+		$location['fleet_url'] = $location['defense_url'] = '';
+		$location['w_power'] = $location['s_power'] = $location['integrity'] = '?';
 		$research = ($location['r.research'] != '')? unserialize($location['r.research']) : array();
 		$w_tech = (isset($research['Weapons Technology']))? $research['Weapons Technology'] : 0;
 		$s_tech = (isset($research['Shielding Technolog']))? $research['Shielding Technology'] : 0;
-		$location['fleet_url'] = $location['defense_url'] = '';
 		$location['fleet_url'] .= "&dwtech={$w_tech}&dstech={$s_tech}";
-		$location['w_power'] = $location['s_power'] = $location['integrity'] = 0;
-		foreach($fleet as $ship => $quantity) {
-			switch($ship) {
-				case "Light Fighter":
-					$location['fleet_url'] .= "&dsfig=".$quantity;
-					$location['w_power'] += 50*(1+$w_tech/10)*$quantity;
-					break;
-				case "Recycler":
-					$location['fleet_url'] .= "&drecy=".$quantity;
-					$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
-					break;
-				case "Solar Satellite":
-					$location['fleet_url'] .= "&dsola=".$quantity;
-					$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
-					break;
+
+		if ($location['r.fleet'] != '') {
+			$fleet = ($location['r.fleet'] != '')? unserialize($location['r.fleet']) : array();
+			if ($location['w_power'] == '?') $location['w_power'] = 0;
+			if ($location['s_power'] == '?') $location['s_power'] = 0;
+			if ($location['integrity'] == '?') $location['integrity'] = 0;
+			foreach($fleet as $ship => $quantity) {
+				switch($ship) {
+					case "Light Fighter":
+						$location['fleet_url'] .= "&dsfig=".$quantity;
+						$location['w_power'] += 50*(1+$w_tech/10)*$quantity;
+						break;
+					case "Recycler":
+						$location['fleet_url'] .= "&drecy=".$quantity;
+						$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
+						break;
+					case "Solar Satellite":
+						$location['fleet_url'] .= "&dsola=".$quantity;
+						$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
+						break;
+				}
 			}
 		}
-		foreach($defense as $name => $quantity) {
-			switch($name) {
-				case "Rocket Launcher":
-					$location['defense_url'] .= "&drock=".$quantity;
-					$location['w_power'] += 80*(1+$w_tech/10)*$quantity;
-					break;
+		if ($location['r.defense'] != '') {
+			$defense = ($location['r.defense'] != '')? unserialize($location['r.defense']) : array();
+			foreach($defense as $name => $quantity) {
+				switch($name) {
+					case "Rocket Launcher":
+						$location['defense_url'] .= "&drock=".$quantity;
+						$location['w_power'] += 80*(1+$w_tech/10)*$quantity;
+						break;
+				}
 			}
 		}
 	}
