@@ -5,6 +5,7 @@
  * Keeps track of Espionage and Attack results for you
  */
 
+session_start(); // Track user state
 date_default_timezone_set('Etc/GMT-2'); // Set timezone for OGame servers
 
 $db = new SQLiteDatabase('ogame.db');
@@ -187,7 +188,7 @@ echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
  
 <body>
 <div id="wrapper">
-<div class="block"><form action="<?php echo $_SERVER['PHP_SELF']; if (isset($_GET['debug'])) echo "?debug"; ?>" method="post"><textarea name="data" style="width:100%; height:100px;"></textarea><input type="submit" value="Parse" /></form>
+<div class="block"><form action="<?php echo $_SERVER['PHP_SELF']; if (isset($_GET['debug'])) echo "?debug"; ?>" method="post"><input type="hidden" name="<?php echo session_name(); ?>" value="<?php echo session_id(); ?>" /><textarea name="data" style="width:100%; height:100px;"></textarea><input type="submit" value="Parse" /></form>
 <p><a href="http://www.jimmywest.se/other/calcogame/index.php?page=Reports" rel="external">JimmyWest Parser</a></p><!-- An additional Espionage Parser, for additional data from the report -->
 </div>
 
@@ -272,7 +273,17 @@ echo "<p style=\"text-align:center\"><img src=\"{$url_m}\" alt=\"\" /><img style
 <?php
 else:
 	///// Show listing of all Locations /////
-	if (empty($_GET['sort'])) $_GET['sort'] = "";
+	if (empty($_GET['sort'])) {
+		if (empty($_SESSION['sort'])) {
+			// No sort specified; fill in default
+			$_GET['sort'] = "";
+			$_SESSION['sort'] = "";
+		} else {
+			$_GET['sort'] = $_SESSION['sort']; // No sort specified for this request; fill in from session data
+		}
+	} else {
+		$_SESSION['sort'] = $_GET['sort']; // New sort parameter specified, fill in session data
+	}
 	switch($_GET['sort']) {
 		case 'updated':
 			$sort = 'r.updated DESC';
