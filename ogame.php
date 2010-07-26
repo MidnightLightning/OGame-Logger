@@ -206,12 +206,15 @@ if (!empty($_GET['l'])):
 	$rs = $rs->fetch(SQLITE_NUM);
 	$ts_max = $rs[0];
 	$ts_min = $rs[1];
-	$max_m = $rs[2]+100;
-	$min_m = $rs[3]-100;
-	$max_c = $rs[4]+100;
-	$min_c = $rs[5]-100;
-	$max_d = $rs[6]+100;
-	$min_d = $rs[7]-100;
+	$max_m = $rs[2]+1000;
+	$min_m = $rs[3]-1000;
+	$max_c = $rs[4]+1000;
+	$min_c = $rs[5]-1000;
+	$max_d = $rs[6]+1000;
+	$min_d = $rs[7]-1000;
+	if ($min_m < 0) $min_m = 0;
+	if ($min_c < 0) $min_c = 0;
+	if ($min_d < 0) $min_d = 0;
 	if ($ts_max != $ts_min) {
 		$x_labels = $x_positions = array();
 		$ts_delta = $ts_max-$ts_min;
@@ -225,8 +228,10 @@ if (!empty($_GET['l'])):
 				$increment = $increment*1;
 			} elseif ($ts_delta < 60*60*18) {
 				$increment = $increment*2;
-			} else {
+			} elseif ($ts_delta < 60*60*24) {
 				$increment = $increment*4;
+			} else {
+				$increment = $increment*12;
 			}
 			list ($x_labels, $x_positions) = date_labels($ts_first+60*60, $increment, $ts_min, $ts_max, "H:i");
 		} else {
