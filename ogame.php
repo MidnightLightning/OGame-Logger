@@ -377,7 +377,7 @@ else:
 		foreach($defense as $name => $quantity) {
 			switch($name) {
 				case "Rocket Launcher":
-					$location['defense_url'] .= "&drock=".quantity;
+					$location['defense_url'] .= "&drock=".$quantity;
 					$location['w_power'] += 80*(1+$w_tech/10)*$quantity;
 					break;
 			}
@@ -393,7 +393,7 @@ else:
 <tbody>
 <?php
 foreach($locations as &$location) {
-	echo "<tr style=\"background-color:{$location['row_color']}\"><td><span style=\"color:{$location['elapsed_color']}\">{$location['elapsed']}</span> ({$location['x.recordnum']} records total)</td><td><a href=\"{$_SERVER['PHP_SELF']}?l={$location['r.location']}\">{$location['l.name']}</a></td><td>{$location['l.location']}</td><td>{$location['l.player']}</td><td class=\"num\">{$location['r.metal_formatted']}</td><td class=\"num\">{$location['r.crystal_formatted']}</td><td class=\"num\">{$location['r.deuterium_formatted']}</td><td>{$location['w_power']}/{$location['s_power']}/{$location['integrity']} <a href=\"http://www.jimmywest.se/other/calcogame/index.php?page=Attack%20Simulator&m_plu={$location['r.metal']}&c_plu={$location['r.crystal']}&d_plu={$location['r.deuterium']}{$location['fleet_url']}&e_pos={$location['l.location']}&sim=true\">Atk. sim</a></td></tr>\n";
+	echo "<tr style=\"background-color:{$location['row_color']}\"><td><span style=\"color:{$location['elapsed_color']}\">{$location['elapsed']}</span> ({$location['x.recordnum']} records total)</td><td><a href=\"{$_SERVER['PHP_SELF']}?l={$location['r.location']}\">{$location['l.name']}</a></td><td>{$location['l.location']}</td><td>{$location['l.player']}</td><td class=\"num\">{$location['r.metal_formatted']}</td><td class=\"num\">{$location['r.crystal_formatted']}</td><td class=\"num\">{$location['r.deuterium_formatted']}</td><td>{$location['w_power']}/{$location['s_power']}/{$location['integrity']} <a href=\"http://www.jimmywest.se/other/calcogame/index.php?page=Attack%20Simulator&m_plu={$location['r.metal']}&c_plu={$location['r.crystal']}&d_plu={$location['r.deuterium']}{$location['fleet_url']}{$location['defense_url']}&e_pos={$location['l.location']}&sim=true\">Atk. sim</a></td></tr>\n";
 }
 ?>
 </tbody>
