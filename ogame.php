@@ -202,7 +202,11 @@ if (!empty($_GET['l'])):
 	$location = $db->query("SELECT * FROM locations WHERE ROWID={$_GET['l']} LIMIT 1;");
 	$location = $location->fetch(SQLITE_ASSOC);
 	
-	$rs = $db->query("SELECT max(updated), min(updated), max(metal), min(metal), max(crystal), min(crystal), max(deuterium), min(deuterium) FROM resources WHERE location={$_GET['l']};");
+	$ts_max = $db->query("SELECT updated FROM resources WHERE location={$_GET['l']} ORDER BY updated DESC LIMIT 1;");
+	$ts_max = $ts_max->fetchSingle();
+	
+	$ts_limit = $ts_max - 60*60*24*5; // Maximum of five days ago
+	$rs = $db->query("SELECT max(updated), min(updated), max(metal), min(metal), max(crystal), min(crystal), max(deuterium), min(deuterium) FROM resources WHERE location={$_GET['l']} AND updated>{$ts_limit};");
 	$rs = $rs->fetch(SQLITE_NUM);
 	$ts_max = $rs[0];
 	$ts_min = $rs[1];
@@ -237,7 +241,7 @@ if (!empty($_GET['l'])):
 		} else {
 			// Time frame is in days
 			$ts_first = mktime(0,0,0, date('n', $ts_min), date('j', $ts_min), date('Y', $ts_min)); // When did the day containing $ts_min start?
-			list ($x_labels, $x_positions) = date_labels($ts_first+60*60, 60*60*24, $ts_min, $ts_max, "d.m.y");
+			list ($x_labels, $x_positions) = date_labels($ts_first+60*60*24, 60*60*24, $ts_min, $ts_max, "d.m.y");
 		}
 		$x_axis = (count($x_positions) > 0)? "&chxp=0,".implode(',', $x_positions)."&chxl=0:|".implode("|", $x_labels)."&chxtc=0,5" : "";
 		$metal = $db->arrayQuery("SELECT metal, updated FROM resources WHERE location={$_GET['l']} ORDER BY updated ASC;", SQLITE_NUM);
