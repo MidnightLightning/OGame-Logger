@@ -388,31 +388,58 @@ else:
 			if ($location['w_power'] == '?') $location['w_power'] = 0;
 			if ($location['s_power'] == '?') $location['s_power'] = 0;
 			if ($location['integrity'] == '?') $location['integrity'] = 0;
+			$ship_types = array(
+				"Small Cargo" => array('var' => 'dscars', 'int' => 4000, 's' => 10, 'w' => 5),
+				"Large Cargo" => array('var' => 'dlcars', 'int' => 30000, 's' => 100, 'w' => 50),
+				"Colony Ship" => array('var' => 'dcols', 'int' => 12000, 's' => 25, 'w' => 5),
+				"Recycler" => array('var' => 'drecy', 'int' => 16000, 's' => 10, 'w' => 1),
+				"Espionage Probe" => array('var' => 'despp', 'int' => 1000, 's' => 0, 'w' => 0),
+				"Solar Satellite" => array('var' => 'dsola', 'int' => 2000, 's' => 1, 'w' => 1),
+				"Light Fighter" => array('var' => 'dsfig', 'int' => 4000, 's' => 10, 'w' => 50),
+				"Heavy Fighter" => array('var' => 'dlfig', 'int' => 10000, 's' => 25, 'w' => 150),
+				"Cruiser" => array('var' => 'dcru', 'int' => 27000, 's' => 50, 'w' => 400),
+				"Battleship" => array('var' => 'dbats', 'int' => 60000, 's' => 200, 'w' => 1000),
+				"Battlecruiser" => array('var' => 'dbetc', 'int' => 70000, 's' => 400, 'w' => 700),
+				"Bomber" => array('var' => 'dbomb', 'int' => 75000, 's' => 500, 'w' => 1000),
+				"Destroyer" => array('var' => 'ddest', 'int' => 110000, 's' => 500, 'w' => 2000),
+				"Deathstar" => array('var' => 'dstar', 'int' => 9000000, 's' => 50000, 'w' => 200000),
+			);
 			foreach($fleet as $ship => $quantity) {
-				switch($ship) {
-					case "Light Fighter":
-						$location['fleet_url'] .= "&dsfig=".$quantity;
-						$location['w_power'] += 50*(1+$w_tech/10)*$quantity;
-						break;
-					case "Recycler":
-						$location['fleet_url'] .= "&drecy=".$quantity;
-						$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
-						break;
-					case "Solar Satellite":
-						$location['fleet_url'] .= "&dsola=".$quantity;
-						$location['w_power'] += 1*(1+$w_tech/10)*$quantity;
-						break;
+				if ($ship != '') {
+					if (isset($ship_types[$ship])) {
+						$location['fleet_url'] .= "&".$ship_types[$ship]['var']."=".$quantity;
+						$location['integrity'] += $ship_types[$ship]['int']*$quantity;
+						$location['s_power'] += $ship_types[$ship]['s']*(1+$s_tech/10)*$quantity;
+						$location['w_power'] += $ship_types[$ship]['w']*(1+$w_tech/10)*$quantity;
+					} else {
+						echo "Unknown ship type '$ship'... ";
+					}
 				}
 			}
 		}
 		if ($location['r.defense'] != '') {
 			$defense = ($location['r.defense'] != '')? unserialize($location['r.defense']) : array();
+			$defense_types = array(
+				"Rocket Launcher" => array('var' => 'drock', 'int' => 2000, 's' => 20, 'w' => 80),
+				"Light Laser" => array('var' => 'dslas', 'int' => 2000, 's' => 25, 'w' => 100),
+				"Heavy Laser" => array('var' => 'dhlas', 'int' => 8000, 's' => 100, 'w' => 250),
+				"Gauss Cannon" => array('var' => 'dgaus', 'int' => 35000, 's' => 200, 'w' => 1100),
+				"Ion Cannon" => array('var' => 'dionc', 'int' => 8000, 's' => 500, 'w' => 150),
+				"Plasma Turret" => array('var' => 'dplas', 'int' => 100000, 's' => 300, 'w' => 3000),
+				"Small Shield Dome" => array('var' => 'dsshi', 'int' => 20000, 's' => 2000, 'w' => 1),
+				"Large Shield Dome" => array('var' => 'dlshi', 'int' => 100000, 's' => 10000, 'w' => 1),
+				"Ballistic Missiles" => array('var' => 'dmiss', 'int' => 0, 's' => 0, 'w' => 0),
+			);
 			foreach($defense as $name => $quantity) {
-				switch($name) {
-					case "Rocket Launcher":
-						$location['defense_url'] .= "&drock=".$quantity;
-						$location['w_power'] += 80*(1+$w_tech/10)*$quantity;
-						break;
+				if ($name != '') {
+					if (isset($defense_types[$name])) {
+						$location['defense_url'] .= '&'.$defense_types[$name]['var'].'='.$quantity;
+						$location['integrity'] += $defense_types[$name]['int']*$quantity;
+						$location['s_power'] += $defense_types[$name]['s']*(1+$s_tech/10)*$quantity;
+						$location['w_power'] += $defense_types[$name]['w']*(1+$w_tech/10)*$quantity;
+					} else {
+						echo "Unknown defense type '$name'... ";
+					}
 				}
 			}
 		}
