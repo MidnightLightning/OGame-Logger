@@ -198,7 +198,15 @@ echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 
 <?php
 if (!empty($_GET['l'])):
-    ///// Show only one Location's data /////
+	///// Show only one Location's data /////
+	if (!empty($_GET['action'])) {
+		if ($_GET['action'] == 'deactivate') {
+			$db->queryExec("UPDATE locations SET type='inactive' WHERE ROWID={$_GET['l']};");
+		} elseif ($_GET['action'] == 'activate') {
+			$db->queryExec("UPDATE locations SET type='planet' WHERE ROWID={$_GET['l']};");
+		}
+	}
+	
 	$location = $db->query("SELECT * FROM locations WHERE ROWID={$_GET['l']} LIMIT 1;");
 	$location = $location->fetch(SQLITE_ASSOC);
 	
@@ -274,6 +282,11 @@ if (!empty($_GET['l'])):
 <div class="block">
 <p>&lArr; <a href="<?=$_SERVER['PHP_SELF']?>">Home</a></p>
 <p><?=$location['name']?> [<?=$location['location']?>]</p>
+<p><? if ($location['type'] == "planet") {
+	echo "<a href=\"".$_SERVER['PHP_SELF']."?l=".$_GET['l']."&action=deactivate\">Deactivate this planet</a>";
+} else { 
+	echo "<a href=\"".$_SERVER['PHP_SELF']."?l=".$_GET['l']."&action=activate\">Re-activate this planet</a>";
+}?></p>
 <?php if (!empty($url_m)) {
 echo "<p style=\"text-align:center\"><img src=\"{$url_m}\" alt=\"\" /><img style=\"margin:0 5px;\" src=\"{$url_c}\" alt=\"\" /><img src=\"{$url_d}\" alt=\"\" /></p>\n";
 }?>
@@ -318,7 +331,8 @@ else:
 		default:
 			$sort = 'l.location';
 	}
-	$locations = $db->arrayQuery("SELECT r.*, l.*, x.recordnum FROM (SELECT location, max(updated) as maxupdated, count(*) AS recordnum FROM resources GROUP BY location) x LEFT JOIN resources r ON r.updated=x.maxupdated AND r.location=x.location LEFT JOIN locations l ON l.ROWID=r.location ORDER BY {$sort};", SQLITE_ASSOC);
+	$where = (!empty($_GET['filter']) && $_GET['filter'] == 'inactive')? "" : "WHERE l.type='planet' ";
+	$locations = $db->arrayQuery("SELECT r.*, l.*, x.recordnum FROM (SELECT location, max(updated) as maxupdated, count(*) AS recordnum FROM resources GROUP BY location) x LEFT JOIN resources r ON r.updated=x.maxupdated AND r.location=x.location LEFT JOIN locations l ON l.ROWID=r.location {$where}ORDER BY {$sort};", SQLITE_ASSOC);
 	
 	$ts_now = time();
 	foreach($locations as &$location) {
@@ -373,6 +387,9 @@ else:
 			$location['elapsed'] = floor($date/60/24)." days ago";
 			$location['elapsed_color'] = "#FF3333";
 			$location['row_color'] = "rgba(255,0,0,0.1)";
+		}
+		if ($location['l.type'] == 'inactive') {
+			$location['row_color'] = "rgba(255,255,255,0.1)";
 		}
 		
 		// Do fleet/defense calculations
@@ -459,6 +476,11 @@ foreach($locations as &$location) {
 ?>
 </tbody>
 </table>
+<p><?php if (!empty($_GET['filter']) && $_GET['filter'] == 'inactive') {
+	echo "<a href=\"".$_SERVER['PHP_SELF']."\">Hide inactive planets</a>";
+} else {
+	echo "<a href=\"".$_SERVER['PHP_SELF']."?filter=inactive\">Show inactive planets</a>";
+}?></p>	
 </div>
 
 <?php
