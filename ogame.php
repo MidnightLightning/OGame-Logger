@@ -360,7 +360,7 @@ else:
 		}
 		$date = $ts_now-$location['r.updated'];
 		$date = $date/60;
-		$row_color = $date_color = "inherit";
+		$location['row_color'] = $location['date_color'] = "inherit";
 		if ($date < 60) {
 			$location['elapsed'] = floor($date)." min. ago";
 			$location['elapsed_color'] = "#00FF00";
